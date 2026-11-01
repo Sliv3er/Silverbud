@@ -18,6 +18,7 @@ public static class AudioConnector
     private const uint KsPropertyTypeGet = 0x1;
     private const uint ClsCtxAll = 0x17;
     private const uint DeviceStateMaskAll = 0xF;
+    private const uint DeviceStateActive = 0x1;
     private const int DataFlowAll = 2;
     private const ushort VtClsid = 72;
 
@@ -27,6 +28,28 @@ public static class AudioConnector
 
     public static Task<int> DisconnectAsync(string address, Guid? containerId) =>
         Task.Run(() => Signal(address, containerId, OneShotDisconnect));
+
+    /// <summary>True when Windows has a working (active) audio endpoint for the buds, LE Audio or classic.</summary>
+    public static Task<bool> IsAudioActiveAsync(Guid? containerId) => Task.Run(() =>
+    {
+        if (containerId is not Guid id)
+            return false;
+        try
+        {
+            var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumeratorComObject();
+            if (enumerator.EnumAudioEndpoints(DataFlowAll, DeviceStateActive, out var endpoints) != 0)
+                return false;
+            endpoints.GetCount(out uint count);
+            for (uint i = 0; i < count; i++)
+                if (endpoints.Item(i, out var endpoint) == 0 && ReadContainerId(endpoint) == id)
+                    return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Write($"Audio state check failed: {ex.Message}");
+        }
+        return false;
+    });
 
     private static int Signal(string address, Guid? containerId, uint property)
     {

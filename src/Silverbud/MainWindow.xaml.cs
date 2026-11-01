@@ -50,7 +50,7 @@ public partial class MainWindow : Window
         Activate();
     }
 
-    private void Quit()
+    public void Quit()
     {
         _exiting = true;
         Close();

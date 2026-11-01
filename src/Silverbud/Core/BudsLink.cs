@@ -38,6 +38,9 @@ public sealed class BudsLink : IAsyncDisposable
                   ?? throw new BudsException("Windows couldn't open these buds. Remove them and pair them again.");
 
         RfcommDeviceService? service = null;
+        // The buds answering a live (uncached) query without the service means they're refusing it right now,
+        // typically because another manager (the phone's Galaxy Wearable) holds it or a stale link lingers.
+        bool refusedByBuds = false;
         foreach (var mode in new[] { BluetoothCacheMode.Uncached, BluetoothCacheMode.Cached })
         {
             try
@@ -45,6 +48,8 @@ public sealed class BudsLink : IAsyncDisposable
                 var result = await WithTimeout(
                     _device.GetRfcommServicesForIdAsync(RfcommServiceId.FromUuid(ServiceUuid), mode).AsTask(), 12000);
                 Log.Write($"Service lookup ({mode}): {result.Error}, {result.Services.Count} found");
+                if (mode == BluetoothCacheMode.Uncached && result.Error == BluetoothError.Success && result.Services.Count == 0)
+                    refusedByBuds = true;
                 if (result.Services.Count > 0)
                 {
                     service = result.Services[0];
@@ -57,10 +62,19 @@ public sealed class BudsLink : IAsyncDisposable
             }
         }
         if (service is null)
-            throw new BudsException("The buds didn't answer. Open the case or put them in your ears, keep them close to the PC, and try again.");
+            throw refusedByBuds
+                ? new BudsUnavailableException(null)
+                : new BudsException("The buds didn't answer. Open the case or put them in your ears, keep them close to the PC, and try again.");
 
         _socket = new StreamSocket();
-        await WithTimeout(_socket.ConnectAsync(service.ConnectionHostName, service.ConnectionServiceName).AsTask(), 15000);
+        try
+        {
+            await WithTimeout(_socket.ConnectAsync(service.ConnectionHostName, service.ConnectionServiceName).AsTask(), 15000);
+        }
+        catch (Exception ex) when (refusedByBuds || (uint)ex.HResult == 0x8007277C) // WSASERVICE_NOT_FOUND
+        {
+            throw new BudsUnavailableException(ex);
+        }
         _output = _socket.OutputStream.AsStreamForWrite(0);
         var input = _socket.InputStream.AsStreamForRead(0);
         _ = Task.Run(() => ReadLoop(input));
@@ -141,8 +155,13 @@ public sealed class BudsLink : IAsyncDisposable
     }
 
     /// <summary>Turns socket errors into something a person can act on.</summary>
-    public static string Explain(Exception? ex) => ex switch
+    /// <param name="retrying">Silverbud keeps trying on its own (the buds' audio is already connected).</param>
+    public static string Explain(Exception? ex, bool retrying = false) => ex switch
     {
+        BudsUnavailableException =>
+            "The buds aren't accepting a settings connection right now. If Galaxy Wearable is open on your phone, close it. " +
+            "Otherwise put both buds in the case for 10 seconds, then take them out." + (retrying ? " Silverbud keeps trying." : ""),
+        _ when retrying => "Your buds are connected, but their settings aren't answering yet. Silverbud keeps trying.",
         null => "Couldn't connect to the buds.",
         BudsException b => b.Message,
         TimeoutException => "The buds didn't answer in time. Take them out of the case, keep them close to the PC, and try again.",
@@ -157,3 +176,6 @@ public sealed class BudsLink : IAsyncDisposable
 }
 
 public sealed class BudsException(string message) : Exception(message);
+
+/// <summary>The buds are reachable but won't offer their settings service right now.</summary>
+public sealed class BudsUnavailableException(Exception? inner) : Exception("The buds' settings service is unavailable", inner);

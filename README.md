@@ -40,7 +40,7 @@ Silverbud talks to the buds directly over Bluetooth, the same way the phone app 
 
 | | |
 |---|---|
-| **Pair and connect** | Find buds in pairing mode and pair them. Connect and disconnect the audio with one click. It connects automatically when you take the buds out of the case. Works with both **LE Audio** and classic Bluetooth. |
+| **Pair and connect** | Find buds in pairing mode and pair them. Connect and disconnect the audio with one click. It connects automatically when you take the buds out of the case, and turns Bluetooth on if it's off. Works with both **LE Audio** and classic Bluetooth. |
 | **Battery** | Left, right and case levels, live. Shows whether each bud is in your ear, out, in the case or charging. Notifies you when a bud runs low. |
 | **Noise control** | Off, noise canceling or ambient sound. Ambient level, plus separate left/right levels and tone. |
 | **Equalizer** | Normal, Bass boost, Soft, Dynamic, Clear, Treble boost, and a 9-band custom EQ (experimental). |
@@ -70,7 +70,7 @@ Silverbud talks to the buds directly over Bluetooth, the same way the phone app 
    > Windows SmartScreen may warn about an app from an unknown publisher, because the exe isn't code-signed. Select **More info → Run anyway**.
 2. **Pair your buds.** Open the case with both buds inside, next to the PC, and select **Find buds to pair**. Then select **Pair** next to your buds.
    If they're already connected to your phone, turn on pairing mode from the phone first. Buds you've already paired in Windows Settings show up on their own.
-3. **That's it.** Silverbud connects as soon as the buds are out of the case, and the battery levels appear.
+3. **That's it.** Silverbud connects as soon as the buds are out of the case, and the battery levels appear. If Bluetooth is off, Silverbud turns it on for you.
 
 Settings and a diagnostic log live in `%APPDATA%\Silverbud`.
 
@@ -107,6 +107,12 @@ The full message format, the Buds3 status layout and the quirks found on real ha
 <summary><b>"The buds didn't answer"</b></summary>
 
 Take the buds out of the case (or open it), keep them close to the PC, and select **Connect** again. If another app is connected to the buds' settings channel (for example Galaxy Buds Manager), close it first; only one app can hold it at a time.
+</details>
+
+<details>
+<summary><b>"The buds aren't accepting a settings connection right now"</b></summary>
+
+The buds are connected but won't offer their settings channel. This usually means the **Galaxy Wearable** app on your phone holds it, so close the app. Otherwise, put both buds in the case for 10 seconds and take them out. Silverbud keeps retrying in the background and connects as soon as the buds allow it.
 </details>
 
 <details>
@@ -147,6 +153,7 @@ Useful switches while developing:
 | `--demo` | Opens the window filled with sample data, so you can work on the UI without buds |
 | `--tray` | Starts in the notification area (used by **Start with Windows**) |
 | `--probe-audio` | Logs every audio endpoint with its driver filter and container id, then exits |
+| `--quit` | Closes a running Silverbud cleanly, releasing the buds' settings link (useful before replacing the exe) |
 
 ### Project layout
 

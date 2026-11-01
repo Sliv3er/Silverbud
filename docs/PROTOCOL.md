@@ -128,4 +128,17 @@ Windows doesn't offer a public API to connect a paired Bluetooth headset, so Sil
 2. Keep those whose `PKEY_Device_ContainerId` matches the buds' Bluetooth container, or whose driver filter id contains the Bluetooth address.
 3. Through `IDeviceTopology` → `IConnector::GetDeviceIdConnectedTo`, open the driver's KS filter and send `IKsControl::KsProperty`. Use set `KSPROPSETID_BtAudio` (`7FA06C40-B8F6-4C7E-8556-E8C33A12E54D`), id `0` to connect or `1` to disconnect.
 
-With LE Audio, the matching filters are the `apxenum` speaker and microphone filters, and both accept the request (**observed**).
+With LE Audio, the matching filters are the `apxenum` speaker and microphone filters, and both accept the request (**observed**). This only works while those filters exist, though. When LE Audio buds are fully disconnected, for example right after Bluetooth is turned back on, no filter is found and the request reaches 0 drivers (**observed**).
+
+### LE Audio buds: bring the audio back first
+
+Two behaviours, both **observed** on Buds3 paired as LE Audio, shape how an app should connect:
+
+1. **The buds drop a settings-only link.** If the RFCOMM settings socket opens while the buds' audio isn't connected to the PC, the buds close it about 10 seconds later ("the buds closed the connection").
+2. **Holding an LE connection restores the audio.** Do this for each bud's LE entry: `BluetoothLEDevice.FromIdAsync` → `GattSession.FromDeviceIdAsync(...).MaintainConnection = true`, then a `GetGattServicesAsync(Uncached)` to trigger it now. Both buds connect within about 2 seconds, and Windows' LE Audio stack brings the audio endpoints up by itself (about 3 seconds in total).
+
+So Silverbud sends the classic request, wakes both LE entries, and waits until an **active** audio endpoint (`DEVICE_STATE_ACTIVE`, same container id) exists. Only then does it open the RFCOMM link. Done in that order, the link stays up.
+
+### When the buds refuse the settings channel
+
+A live (uncached) SDP query can succeed and still list **0** instances of the settings service, while a cached query lists 1 (**observed**). Connecting then fails with a timeout or `0x8007277C` (`WSASERVICE_NOT_FOUND`). The buds are reachable but not offering the channel, typically because another manager (the phone's Galaxy Wearable app) holds it or a previous link wasn't closed cleanly. It recovers by itself. Silverbud retries with growing pauses instead of giving up.

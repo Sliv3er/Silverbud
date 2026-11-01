@@ -16,7 +16,7 @@
     <ApplicationIcon>Assets\silverbud.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
 
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Product>Silverbud</Product>
     <Description>Galaxy Buds3 manager for Windows</Description>
     <Authors>Sliv3er</Authors>

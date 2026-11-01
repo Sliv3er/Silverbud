@@ -106,6 +106,143 @@ public sealed class MainViewModel : Observable, IDisposable
             Log.Write($"Bluetooth watcher failed: {ex}");
             RailMessage = "Bluetooth isn't available. Turn it on in Windows settings.";
         }
+        _ = InitBluetoothAsync();
+    }
+
+    // ───── Bluetooth radio ─────
+
+    private const string BluetoothOffText = "Bluetooth is off. Select Connect to turn it on and connect your buds.";
+    private readonly BluetoothRadio _radio = new();
+    private bool _bluetoothOff;
+    private bool _connectHandlesRadio;
+
+    public bool IsBluetoothOff
+    {
+        get => _bluetoothOff;
+        private set => Set(ref _bluetoothOff, value);
+    }
+
+    private async Task InitBluetoothAsync()
+    {
+        await _radio.InitAsync();
+        _radio.StateChanged += on => _ui.BeginInvoke(() => OnRadioChanged(on));
+        IsBluetoothOff = _radio.IsAvailable && !_radio.IsOn;
+        if (!IsBluetoothOff)
+            return;
+        if (_settings.AutoEnableBluetooth)
+        {
+            StatusText = "Turning on Bluetooth…";
+            if (!await _radio.TurnOnAsync())
+                StatusText = "Windows didn't let Silverbud turn on Bluetooth. Turn it on in Windows settings, or allow apps to control radios in Privacy settings.";
+        }
+        else
+        {
+            StatusText = BluetoothOffText;
+        }
+    }
+
+    private void OnRadioChanged(bool on)
+    {
+        bool wasOff = IsBluetoothOff;
+        IsBluetoothOff = !on;
+        if (!on)
+        {
+            Log.Write("Bluetooth turned off");
+            _autoTimer?.Cancel();
+            StatusText = BluetoothOffText;
+            return;
+        }
+        if (!wasOff)
+            return;
+        Log.Write("Bluetooth turned on");
+        StatusText = "";
+        if (!_connectHandlesRadio)
+            _ = ConnectAudioAfterRadioOnAsync();
+    }
+
+    /// <summary>Bluetooth just came on: connect the buds' audio, like the Connect button in Settings.</summary>
+    private async Task ConnectAudioAfterRadioOnAsync()
+    {
+        await Task.Delay(2000);
+        for (int i = 0; i < 20 && Selected is null; i++)
+            await Task.Delay(500);
+        var device = Selected;
+        if (device is null || device.IsDemo || _userDisconnected || IsBluetoothOff ||
+            await AudioConnector.IsAudioActiveAsync(device.ContainerId))
+            return;
+        StatusText = "Connecting your buds…";
+        // Once the audio is up the buds count as online, and the automatic connection opens the settings link.
+        if (!await BringAudioOnlineAsync(device) && Selected == device && _link is null)
+            StatusText = AudioNotConnectedText;
+    }
+
+    private const string AudioNotConnectedText =
+        "The buds didn't connect. Take them out of the case, and if they're playing on your phone, select Connect again.";
+
+    /// <summary>
+    /// Asks Windows for the buds' audio — the classic request and an LE wake — and waits until Windows has a
+    /// working audio endpoint for them. The settings link should only open after that: the buds drop a
+    /// settings-only connection after about 10 seconds.
+    /// </summary>
+    private async Task<bool> BringAudioOnlineAsync(DeviceItem device, int timeoutMs = 15000)
+    {
+        int accepted = await AudioConnector.ConnectAsync(device.Address, device.ContainerId);
+        Log.Write($"Audio connect accepted by {accepted} driver(s)");
+        using var waker = new LeAudioWaker();
+        await waker.WakeAsync(_leById.Values
+            .Where(le => le.Address == device.Address || le.Name == device.Name)
+            .Select(le => le.Id).ToList());
+        var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMs);
+        bool active;
+        while (!(active = await AudioConnector.IsAudioActiveAsync(device.ContainerId)) &&
+               DateTime.UtcNow < deadline && Selected == device)
+            await Task.Delay(700);
+        Log.Write(active ? "Buds audio is active" : "Buds audio didn't come up");
+        return active;
+    }
+
+    // ───── Automatic connection ─────
+    // While the buds are connected to this PC, keep the settings link up without the user pressing Connect:
+    // retry with growing pauses, because the buds can refuse it for a while (e.g. right after another device used it).
+
+    private static readonly int[] RetryDelays = [4000, 8000, 15000, 30000, 60000];
+    private CancellationTokenSource? _autoTimer;
+    private int _retryStep;
+
+    private void ResetAutoConnect(int delay)
+    {
+        _retryStep = 0;
+        ScheduleAutoConnect(delay);
+    }
+
+    private void ScheduleAutoConnect(int delay)
+    {
+        _autoTimer?.Cancel();
+        var timer = _autoTimer = new CancellationTokenSource();
+        _ = AutoConnectAfterAsync(delay, timer.Token);
+    }
+
+    private async Task AutoConnectAfterAsync(int delay, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(delay, token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+        var device = Selected;
+        if (device is not { IsDemo: false, IsOnline: true } || !_settings.AutoConnect || _userDisconnected ||
+            IsBluetoothOff || _link is not null || _opening)
+            return;
+        await OpenLinkAsync(device, attempts: 1, background: true);
+        if (_link is null && Selected == device && !token.IsCancellationRequested)
+        {
+            int next = RetryDelays[Math.Min(_retryStep++, RetryDelays.Length - 1)];
+            Log.Write($"Auto-connect: trying again in {next / 1000} s");
+            ScheduleAutoConnect(next);
+        }
     }
 
     // ───── Device list ─────
@@ -254,13 +391,14 @@ public sealed class MainViewModel : Observable, IDisposable
         if (online)
         {
             if (_settings.AutoConnect && _link is null && !_userDisconnected)
-                _ = OpenLinkAfterDelayAsync(item, 1500);
+                ResetAutoConnect(1500);
         }
         else
         {
+            _autoTimer?.Cancel();
             _userDisconnected = false;
             if (_link is null)
-                StatusText = "";
+                StatusText = IsBluetoothOff ? BluetoothOffText : "";
         }
     }
 
@@ -458,9 +596,9 @@ public sealed class MainViewModel : Observable, IDisposable
         _settings.LastDeviceId = device.Id;
         _settings.Save();
         if (device.IsOnline && _settings.AutoConnect)
-            await OpenLinkAsync(device, 3);
+            ResetAutoConnect(0);
         else if (!device.IsOnline)
-            StatusText = "Select Connect when the buds are out of the case.";
+            StatusText = IsBluetoothOff ? BluetoothOffText : "Select Connect when the buds are out of the case.";
     }
 
     private async Task ConnectAsync()
@@ -469,31 +607,51 @@ public sealed class MainViewModel : Observable, IDisposable
         if (device is null || device.IsDemo || _link is not null)
             return;
         _userDisconnected = false;
-        if (!device.IsOnline)
+        _autoTimer?.Cancel();
+        if (IsBluetoothOff)
         {
             LinkState = LinkState.Connecting;
-            StatusText = "Asking Windows to connect the audio…";
-            int accepted = await AudioConnector.ConnectAsync(device.Address, device.ContainerId);
-            Log.Write($"Audio connect accepted by {accepted} driver(s)");
-            await Task.Delay(accepted > 0 ? 3000 : 300);
+            StatusText = "Turning on Bluetooth…";
+            _connectHandlesRadio = true;
+            try
+            {
+                if (!await _radio.TurnOnAsync())
+                {
+                    LinkState = LinkState.Idle;
+                    StatusText = "Windows didn't let Silverbud turn on Bluetooth. Turn it on in Windows settings, or allow apps to control radios in Privacy settings.";
+                    return;
+                }
+                await Task.Delay(3000);
+            }
+            finally
+            {
+                _connectHandlesRadio = false;
+            }
+        }
+        if (!await AudioConnector.IsAudioActiveAsync(device.ContainerId))
+        {
+            LinkState = LinkState.Connecting;
+            StatusText = "Connecting your buds' audio…";
+            if (!await BringAudioOnlineAsync(device))
+            {
+                LinkState = LinkState.Idle;
+                StatusText = AudioNotConnectedText;
+                return;
+            }
         }
         await OpenLinkAsync(device, 4);
+        if (_link is null && Selected == device && device.IsOnline && _settings.AutoConnect)
+            ScheduleAutoConnect(RetryDelays[1]);
     }
 
-    private async Task OpenLinkAfterDelayAsync(DeviceItem device, int delay)
-    {
-        await Task.Delay(delay);
-        if (Selected == device && _link is null && !_userDisconnected)
-            await OpenLinkAsync(device, 3);
-    }
-
-    private async Task OpenLinkAsync(DeviceItem device, int attempts)
+    private async Task OpenLinkAsync(DeviceItem device, int attempts, bool background = false)
     {
         if (_opening || _link is not null)
             return;
         _opening = true;
         LinkState = LinkState.Connecting;
-        StatusText = "Connecting to the buds…";
+        if (!background || string.IsNullOrEmpty(StatusText))
+            StatusText = "Connecting to the buds…";
         Exception? last = null;
         try
         {
@@ -533,7 +691,7 @@ public sealed class MainViewModel : Observable, IDisposable
             }
             LinkState = LinkState.Idle;
             if (Selected == device)
-                StatusText = BudsLink.Explain(last);
+                StatusText = BudsLink.Explain(last, retrying: device.IsOnline && _settings.AutoConnect);
         }
         finally
         {
@@ -560,8 +718,8 @@ public sealed class MainViewModel : Observable, IDisposable
         if (_userDisconnected)
             return;
         StatusText = "The buds disconnected. They reconnect automatically when they're back in range.";
-        if (Selected is { IsOnline: true } device && _settings.AutoConnect)
-            _ = OpenLinkAfterDelayAsync(device, 3000);
+        if (Selected is { IsOnline: true } && _settings.AutoConnect)
+            ResetAutoConnect(3000);
     }
 
     private async Task DisconnectAsync()
@@ -570,6 +728,7 @@ public sealed class MainViewModel : Observable, IDisposable
         if (device is null || device.IsDemo)
             return;
         _userDisconnected = true;
+        _autoTimer?.Cancel();
         if (IsRinging)
             IsRinging = false;
         await _sendChain;
@@ -1153,7 +1312,22 @@ public sealed class MainViewModel : Observable, IDisposable
     public bool AutoConnect
     {
         get => _settings.AutoConnect;
-        set { _settings.AutoConnect = value; _settings.Save(); Raise(); }
+        set
+        {
+            _settings.AutoConnect = value;
+            _settings.Save();
+            Raise();
+            if (value && Selected is { IsOnline: true } && _link is null && !_userDisconnected)
+                ResetAutoConnect(0);
+            else if (!value)
+                _autoTimer?.Cancel();
+        }
+    }
+
+    public bool AutoEnableBluetooth
+    {
+        get => _settings.AutoEnableBluetooth;
+        set { _settings.AutoEnableBluetooth = value; _settings.Save(); Raise(); }
     }
 
     public bool CloseToTray
@@ -1232,6 +1406,7 @@ public sealed class MainViewModel : Observable, IDisposable
 
     public void Dispose()
     {
+        _autoTimer?.Cancel();
         _scanTimer?.Cancel();
         _scanner.Dispose();
         var link = _link;

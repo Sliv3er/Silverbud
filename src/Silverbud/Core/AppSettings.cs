@@ -14,6 +14,7 @@ public sealed class AppSettings
 
     public string? LastDeviceId { get; set; }
     public bool AutoConnect { get; set; } = true;
+    public bool AutoEnableBluetooth { get; set; } = true;
     public bool CloseToTray { get; set; } = true;
     public bool LowBatteryAlert { get; set; } = true;
     public int[] CustomEq { get; set; } = new int[9];

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2 (2026-11-01)
+
+- **Connects by itself when the buds are already connected.** Silverbud no longer gives up after three tries. While your buds are connected to the PC it keeps retrying in the background (4 s, 8 s, 15 s, 30 s, then every minute), so you don't need to press Connect.
+- **Reliable Connect for LE Audio buds.** Connect now brings the buds' audio back first: a classic audio request plus a Bluetooth LE wake-up. It waits until Windows has working audio for the buds, then attaches the settings link. Before, the buds dropped the settings link after about 10 seconds when their audio wasn't connected.
+- **Turns Bluetooth on.** If Bluetooth is off when Silverbud starts, or when you select Connect, Silverbud turns it on and connects your buds. You can switch this off with **Turn on Bluetooth automatically** in the Device tab.
+- **Clearer messages** when the buds refuse the settings connection. This usually means the Galaxy Wearable app on your phone holds it, or the buds need 10 seconds in the case.
+- New `--quit` switch closes a running Silverbud cleanly, so updates don't need to force-close it.
+
 ## 1.0.1 (2026-11-01)
 
 - When the buds refuse noise canceling or ambient sound because only one bud is in your ear, the Noise control card now says so, naming the bud that's in. Its **Allow with one bud** button turns on *noise controls with one earbud* and tries again. Before, the reason only appeared as small text under the device name.

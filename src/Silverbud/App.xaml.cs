@@ -11,9 +11,11 @@ public partial class App : Application
 {
     private const string InstanceName = "Silverbud.SingleInstance";
     private const string ActivateName = "Silverbud.Activate";
+    private const string QuitName = "Silverbud.Quit";
 
     private Mutex? _instance;
     private EventWaitHandle? _activate;
+    private EventWaitHandle? _quit;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -28,8 +30,14 @@ public partial class App : Application
         _instance = new Mutex(true, InstanceName, out bool firstInstance);
         if (!firstInstance)
         {
-            // Already running (maybe in the tray): bring that window forward instead.
-            try { EventWaitHandle.OpenExisting(ActivateName).Set(); } catch { }
+            // Already running (maybe in the tray): bring that window forward, or with --quit close it
+            // cleanly so the buds' settings link is released (used when updating the exe).
+            try { EventWaitHandle.OpenExisting(e.Args.Contains("--quit") ? QuitName : ActivateName).Set(); } catch { }
+            Shutdown();
+            return;
+        }
+        if (e.Args.Contains("--quit"))
+        {
             Shutdown();
             return;
         }
@@ -51,10 +59,19 @@ public partial class App : Application
         MainWindow = window;
 
         _activate = new EventWaitHandle(false, EventResetMode.AutoReset, ActivateName);
+        _quit = new EventWaitHandle(false, EventResetMode.AutoReset, QuitName);
         new Thread(() =>
         {
-            while (_activate.WaitOne())
+            WaitHandle[] signals = [_activate, _quit];
+            while (true)
+            {
+                if (WaitHandle.WaitAny(signals) == 1)
+                {
+                    Dispatcher.BeginInvoke(window.Quit);
+                    return;
+                }
                 Dispatcher.BeginInvoke(window.ShowFromTray);
+            }
         }) { IsBackground = true, Name = "Activation listener" }.Start();
 
         if (!e.Args.Contains("--tray"))

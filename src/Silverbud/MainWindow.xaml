@@ -515,8 +515,11 @@
                                 <Border Style="{StaticResource Card}">
                                     <StackPanel>
                                         <TextBlock Margin="20,16,20,12" Text="Silverbud" Style="{StaticResource CardTitle}" />
-                                        <c:SettingRow Title="Connect automatically" Description="Open the settings link as soon as Windows connects the buds.">
+                                        <c:SettingRow Title="Connect automatically" Description="Open the settings link as soon as Windows connects the buds, and keep retrying if they don't answer.">
                                             <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding AutoConnect}" />
+                                        </c:SettingRow>
+                                        <c:SettingRow Title="Turn on Bluetooth automatically" Description="If Bluetooth is off when Silverbud starts, turn it on and connect your buds.">
+                                            <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding AutoEnableBluetooth}" />
                                         </c:SettingRow>
                                         <c:SettingRow Title="Start with Windows" Description="Starts in the notification area, ready when you put the buds in.">
                                             <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding StartWithWindows}" />
