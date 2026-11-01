@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1 (2026-11-01)
+
+- When the buds refuse noise canceling or ambient sound because only one bud is in your ear, the Noise control card now says so, naming the bud that's in. Its **Allow with one bud** button turns on *noise controls with one earbud* and tries again. Before, the reason only appeared as small text under the device name.
+
 ## 1.0.0 (2026-11-01)
 
 First release.

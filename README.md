@@ -112,7 +112,7 @@ Take the buds out of the case (or open it), keep them close to the PC, and selec
 <details>
 <summary><b>Noise canceling switches back to Off</b></summary>
 
-The Buds3 refuse noise canceling while you wear only one bud, unless **Noise controls with one earbud** is on. It's in the **Device** tab. Silverbud shows this hint when it happens.
+The Buds3 refuse noise canceling and ambient sound while you wear only one bud, unless **Noise controls with one earbud** is on. When that happens, Silverbud shows a notice in the Noise control card. Select **Allow with one bud** to turn the setting on and switch modes in one go. You can also change the setting in the **Device** tab.
 </details>
 
 <details>

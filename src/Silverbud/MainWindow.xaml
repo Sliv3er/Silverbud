@@ -244,6 +244,26 @@
                                                                      IsChecked="{Binding NoiseControl, Converter={StaticResource IntEq}, ConverterParameter=2}" />
                                                     </StackPanel>
                                                 </Border>
+                                                <!-- Shown when the buds refuse a mode because only one bud is worn -->
+                                                <Border Margin="0,14,0,0" Padding="14,12" CornerRadius="10" BorderThickness="1"
+                                                        Background="{StaticResource NoticeBrush}" BorderBrush="{StaticResource NoticeRimBrush}"
+                                                        Visibility="{Binding ShowOneBudNotice, Converter={StaticResource BoolVis}}">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Margin="0,2,12,0" VerticalAlignment="Top" Text="&#xE7BA;" FontFamily="{StaticResource IconFont}"
+                                                                   FontSize="16" Foreground="{StaticResource LedAmberBrush}" />
+                                                        <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding OneBudNoticeTitle}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                            <TextBlock Margin="0,3,0,0" Text="{Binding OneBudNoticeText}" Style="{StaticResource Hint}" />
+                                                        </StackPanel>
+                                                        <Button Grid.Column="2" VerticalAlignment="Center" Padding="14,7" Style="{StaticResource SecondaryButton}"
+                                                                Content="Allow with one bud" Command="{Binding AllowOneBudCommand}" />
+                                                    </Grid>
+                                                </Border>
                                             </StackPanel>
                                             <c:SettingRow Title="Ambient sound level" Description="How much of your surroundings you hear."
                                                           Visibility="{Binding NoiseControl, Converter={StaticResource IntEqVis}, ConverterParameter=2}">

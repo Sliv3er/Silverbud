@@ -21,6 +21,8 @@
     <SolidColorBrush x:Key="LedGreenBrush" Color="#2E9E68" />
     <SolidColorBrush x:Key="LedAmberBrush" Color="#D4881E" />
     <SolidColorBrush x:Key="LedRedBrush" Color="#CF4436" />
+    <SolidColorBrush x:Key="NoticeBrush" Color="#FBF2E3" />
+    <SolidColorBrush x:Key="NoticeRimBrush" Color="#EBCD9C" />
 
     <LinearGradientBrush x:Key="AlloyBrush" StartPoint="0,0" EndPoint="0.35,1">
         <GradientStop Offset="0" Color="#ECEEF1" />

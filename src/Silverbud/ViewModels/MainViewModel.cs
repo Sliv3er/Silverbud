@@ -57,6 +57,7 @@ public sealed class MainViewModel : Observable, IDisposable
         PairingModeCommand = new RelayCommand(_ => EnterPairingMode(), _ => IsLinked);
         FactoryResetCommand = new RelayCommand(_ => FactoryReset(), _ => IsLinked);
         RefreshInfoCommand = new RelayCommand(_ => Send(MsgId.DebugGetAllData), _ => IsLinked);
+        AllowOneBudCommand = new RelayCommand(_ => AllowOneBudAsync(), _ => IsLinked);
         ResetEqCommand = new RelayCommand(_ => { foreach (var b in EqBands) b.Gain = 0; });
         OpenBluetoothSettingsCommand = new RelayCommand(_ => Shell("ms-settings:bluetooth"));
         OpenLogFolderCommand = new RelayCommand(_ => Shell(AppSettings.Folder));
@@ -81,6 +82,7 @@ public sealed class MainViewModel : Observable, IDisposable
     public ICommand PairingModeCommand { get; }
     public ICommand FactoryResetCommand { get; }
     public ICommand RefreshInfoCommand { get; }
+    public ICommand AllowOneBudCommand { get; }
     public ICommand ResetEqCommand { get; }
     public ICommand OpenBluetoothSettingsCommand { get; }
     public ICommand OpenLogFolderCommand { get; }
@@ -688,11 +690,15 @@ public sealed class MainViewModel : Observable, IDisposable
             case MsgId.NoiseControls when applied != NoiseControl:
                 int requested = NoiseControl;
                 Sync(() => NoiseControl = applied);
-                bool oneBudWorn = (_placementL == Placement.Wearing) != (_placementR == Placement.Wearing);
-                string mode = requested == 1 ? "Noise canceling" : "Ambient sound";
-                StatusText = oneBudWorn && !NoiseControlsWithOneEarbud
-                    ? $"{mode} needs both buds in your ears. To use it with one bud, turn on Noise controls with one earbud in the Device tab."
-                    : $"The buds didn't switch to {mode.ToLowerInvariant()}.";
+                if (OneBudWorn && !NoiseControlsWithOneEarbud)
+                {
+                    _refusedMode = requested;
+                    RaiseOneBudNotice();
+                }
+                else
+                {
+                    StatusText = $"The buds didn't switch to {ModeName(requested).ToLowerInvariant()}.";
+                }
                 break;
             case MsgId.Equalizer:
                 Sync(() => EqPreset = applied is <= 5 ? applied : CustomEqPreset);
@@ -790,6 +796,7 @@ public sealed class MainViewModel : Observable, IDisposable
         ChargingCase = s.ChargingCase;
         _placementL = s.PlacementL;
         _placementR = s.PlacementR;
+        RaiseOneBudNotice();
         StateLeft = Describe(s.PlacementL, s.ChargingL);
         StateRight = Describe(s.PlacementR, s.ChargingR);
         StateCase = BatteryCase < 0 ? "Updates when a bud is in the case" : s.ChargingCase ? "Charging" : "";
@@ -835,6 +842,8 @@ public sealed class MainViewModel : Observable, IDisposable
         StateLeft = StateRight = StateCase = "";
         ChargingLeft = ChargingRight = ChargingCase = false;
         Firmware = Hardware = Temperatures = Voltages = "—";
+        _refusedMode = null;
+        RaiseOneBudNotice();
         _isRinging = false;
         Raise(nameof(IsRinging));
         Raise(nameof(RingLabel));
@@ -1062,8 +1071,48 @@ public sealed class MainViewModel : Observable, IDisposable
     public bool NoiseControlsWithOneEarbud
     {
         get => _noiseControlsWithOneEarbud;
-        set { if (Set(ref _noiseControlsWithOneEarbud, value) && !_syncing) Send(MsgId.SetAncWithOneEarbud, B(value)); }
+        set
+        {
+            if (!Set(ref _noiseControlsWithOneEarbud, value))
+                return;
+            RaiseOneBudNotice();
+            if (!_syncing)
+                Send(MsgId.SetAncWithOneEarbud, B(value));
+        }
     }
+
+    // ───── "Needs both buds" notice ─────
+    // The buds refuse noise canceling / ambient sound while only one bud is worn, unless noise controls
+    // with one earbud is on. After such a refusal the Noise control card explains it and offers the fix.
+
+    private int? _refusedMode;
+
+    private bool OneBudWorn => (_placementL == Placement.Wearing) != (_placementR == Placement.Wearing);
+
+    public bool ShowOneBudNotice => _refusedMode is not null;
+    public string OneBudNoticeTitle => $"{ModeName(_refusedMode ?? 1)} needs both buds in your ears";
+    public string OneBudNoticeText =>
+        $"Only your {(_placementR == Placement.Wearing ? "right" : "left")} bud is in. Put the other one in, or allow noise controls with one bud.";
+
+    private void RaiseOneBudNotice()
+    {
+        // The notice goes away by itself once both buds are in, or the setting is on
+        if (_refusedMode is not null && !(IsLinked && OneBudWorn && !NoiseControlsWithOneEarbud))
+            _refusedMode = null;
+        Raise(nameof(ShowOneBudNotice));
+        Raise(nameof(OneBudNoticeTitle));
+        Raise(nameof(OneBudNoticeText));
+    }
+
+    private async Task AllowOneBudAsync()
+    {
+        int mode = _refusedMode ?? 1;
+        NoiseControlsWithOneEarbud = true;
+        await Task.Delay(400);
+        NoiseControl = mode;
+    }
+
+    private static string ModeName(int mode) => mode == 2 ? "Ambient sound" : "Noise canceling";
 
     public bool Seamless
     {
