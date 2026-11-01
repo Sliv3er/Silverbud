@@ -5,6 +5,7 @@
 <p align="center">
   <a href="https://github.com/Sliv3er/Silverbud/releases/latest"><img src="https://img.shields.io/github/v/release/Sliv3er/Silverbud?style=flat-square&color=1D2127&label=release" alt="Latest release"></a>
   <a href="https://github.com/Sliv3er/Silverbud/releases"><img src="https://img.shields.io/github/downloads/Sliv3er/Silverbud/total?style=flat-square&color=2E9E68" alt="Downloads"></a>
+  <a href="https://github.com/Sliv3er/Silverbud/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/Sliv3er/Silverbud/build.yml?branch=main&style=flat-square&label=build" alt="Build status"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-646D78?style=flat-square" alt="Windows 10 and 11">
   <img src="https://img.shields.io/badge/.NET-10-512BD4?style=flat-square" alt=".NET 10">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/Sliv3er/Silverbud?style=flat-square&color=646D78" alt="MIT license"></a>
