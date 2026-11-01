@@ -1,0 +1,40 @@
+name: Bug report
+description: Something doesn't work with your buds
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: buds
+    attributes:
+      label: Buds model and firmware
+      description: Shown in Device → About these buds.
+      placeholder: Galaxy Buds3, R530XXU0AYG3
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 25H2
+    validations:
+      required: true
+  - type: dropdown
+    id: pairing
+    attributes:
+      label: How are the buds paired?
+      options:
+        - Not sure
+        - LE Audio (Windows 11)
+        - Classic Bluetooth
+  - type: textarea
+    id: log
+    attributes:
+      label: Log excerpt
+      description: The relevant lines from %APPDATA%\Silverbud\silverbud.log (Device → Open log folder). Remove anything you consider private.
+      render: text

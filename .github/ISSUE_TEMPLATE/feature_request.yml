@@ -1,0 +1,16 @@
+name: Feature or model request
+description: Suggest a setting, an improvement, or support for another Galaxy Buds model
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Silverbud to do?
+    validations:
+      required: true
+  - type: textarea
+    id: capture
+    attributes:
+      label: Captures (for new models or settings)
+      description: If you have a log from your buds, paste the lines that start with "<- #97" (the status snapshot).
+      render: text

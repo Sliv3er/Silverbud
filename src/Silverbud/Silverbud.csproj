@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <!-- WPF owns DPI awareness via app.manifest; the WinForms analyzer's advice doesn't apply -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <AssemblyName>Silverbud</AssemblyName>
+    <RootNamespace>Silverbud</RootNamespace>
+    <ApplicationIcon>Assets\silverbud.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <Version>1.0.0</Version>
+    <Product>Silverbud</Product>
+    <Description>Galaxy Buds3 manager for Windows</Description>
+    <Authors>Sliv3er</Authors>
+    <Copyright>Copyright © 2026 Sliv3er</Copyright>
+    <RepositoryUrl>https://github.com/Sliv3er/Silverbud</RepositoryUrl>
+
+    <!-- One self-contained .exe: no .NET install needed on the PC -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\silverbud.ico" />
+  </ItemGroup>
+
+</Project>
