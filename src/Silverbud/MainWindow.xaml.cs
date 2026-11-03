@@ -108,7 +108,10 @@ public partial class MainWindow : Window
             noise.Enabled = ring.Enabled = _vm.IsLinked;
             ring.Text = _vm.RingLabel;
             foreach (Forms.ToolStripMenuItem item in noise.DropDownItems)
+            {
                 item.Checked = (int)item.Tag! == _vm.NoiseControl;
+                item.Visible = (int)item.Tag! != 2 || _vm.HasAmbientSound;
+            }
         };
 
         var tray = new Forms.NotifyIcon

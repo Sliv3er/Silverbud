@@ -41,7 +41,7 @@ Example: noise canceling on → `FD 04 00 78 01 <crc lo> <crc hi> DD`.
 | 111 | `SET_ANC_WITH_ONE_EARBUD` | PC → buds | `[1/0]` |
 | 114 | `PAIRING_MODE` | PC → buds | none. The buds disconnect and become discoverable. |
 | 119 | `NOISE_CONTROLS_UPDATE` | buds → PC | `[mode]` when changed on the buds |
-| 120 | `NOISE_CONTROLS` | PC → buds | `[mode]`: 0 off, 1 noise canceling, 2 ambient (3 adaptive, Pro only) |
+| 120 | `NOISE_CONTROLS` | PC → buds | `[mode]`: 0 off, 1 noise canceling, 2 ambient, 3 adaptive (2 and 3 on the Buds3 Pro only: the Buds3 ack `[120, current mode]` and stay put) |
 | 130 | `CUSTOMIZE_AMBIENT_SOUND` | PC → buds | `[on, left 0–2, right 0–2, tone 0–4]` |
 | 132 | `AMBIENT_VOLUME` | PC → buds | `[0–2]` |
 | 133 | `ADJUST_SOUND_SYNC` | PC → buds | Game mode `[1/0]` |

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 (2026-11-03)
+
+- **No more Ambient sound option on the Buds3.** The open-fit Buds3 have no ambient mode, and the buds turned down every request for it, so selecting it did nothing. Silverbud now offers Ambient sound and its level and tone settings only on the Buds3 Pro. On the Buds3, the Noise control card explains what noise canceling does on open-fit buds instead: it quietens steady low sounds, not voices.
+
 ## 1.0.2 (2026-11-01)
 
 - **Connects by itself when the buds are already connected.** Silverbud no longer gives up after three tries. While your buds are connected to the PC it keeps retrying in the background (4 s, 8 s, 15 s, 30 s, then every minute), so you don't need to press Connect.

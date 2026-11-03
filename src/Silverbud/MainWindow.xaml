@@ -241,9 +241,14 @@
                                                         <RadioButton Style="{StaticResource Segment}" GroupName="nc" Content="Noise canceling"
                                                                      IsChecked="{Binding NoiseControl, Converter={StaticResource IntEq}, ConverterParameter=1}" />
                                                         <RadioButton Style="{StaticResource Segment}" GroupName="nc" Content="Ambient sound"
-                                                                     IsChecked="{Binding NoiseControl, Converter={StaticResource IntEq}, ConverterParameter=2}" />
+                                                                     IsChecked="{Binding NoiseControl, Converter={StaticResource IntEq}, ConverterParameter=2}"
+                                                                     Visibility="{Binding HasAmbientSound, Converter={StaticResource BoolVis}}" />
                                                     </StackPanel>
                                                 </Border>
+                                                <!-- Buds3 (open fit): no ambient mode, and noise canceling is gentle -->
+                                                <TextBlock Margin="0,10,0,0" Style="{StaticResource Hint}"
+                                                           Visibility="{Binding HasAmbientSound, Converter={StaticResource InvBoolVis}}"
+                                                           Text="Buds3 are open-fit, so you always hear your surroundings and there's no ambient mode. Noise canceling quietens steady low sounds, like engines, fans and air conditioning, but not voices." />
                                                 <!-- Shown when the buds refuse a mode because only one bud is worn -->
                                                 <Border Margin="0,14,0,0" Padding="14,12" CornerRadius="10" BorderThickness="1"
                                                         Background="{StaticResource NoticeBrush}" BorderBrush="{StaticResource NoticeRimBrush}"
@@ -269,19 +274,21 @@
                                                           Visibility="{Binding NoiseControl, Converter={StaticResource IntEqVis}, ConverterParameter=2}">
                                                 <Slider Width="200" Style="{StaticResource HSlider}" Minimum="0" Maximum="2" Value="{Binding AmbientVolume}" />
                                             </c:SettingRow>
-                                            <c:SettingRow Title="Customize ambient sound" Description="Set a separate level for each ear and adjust the tone.">
-                                                <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding AmbientCustomOn}" />
-                                            </c:SettingRow>
-                                            <StackPanel Visibility="{Binding AmbientCustomOn, Converter={StaticResource BoolVis}}">
-                                                <c:SettingRow Title="Left ear level">
-                                                    <Slider Width="200" Style="{StaticResource HSlider}" Minimum="0" Maximum="2" Value="{Binding AmbientCustomLeft}" />
+                                            <StackPanel Visibility="{Binding HasAmbientSound, Converter={StaticResource BoolVis}}">
+                                                <c:SettingRow Title="Customize ambient sound" Description="Set a separate level for each ear and adjust the tone.">
+                                                    <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding AmbientCustomOn}" />
                                                 </c:SettingRow>
-                                                <c:SettingRow Title="Right ear level">
-                                                    <Slider Width="200" Style="{StaticResource HSlider}" Minimum="0" Maximum="2" Value="{Binding AmbientCustomRight}" />
-                                                </c:SettingRow>
-                                                <c:SettingRow Title="Tone" Description="From softer to clearer.">
-                                                    <Slider Width="200" Style="{StaticResource HSlider}" Minimum="0" Maximum="4" Value="{Binding AmbientTone}" />
-                                                </c:SettingRow>
+                                                <StackPanel Visibility="{Binding AmbientCustomOn, Converter={StaticResource BoolVis}}">
+                                                    <c:SettingRow Title="Left ear level">
+                                                        <Slider Width="200" Style="{StaticResource HSlider}" Minimum="0" Maximum="2" Value="{Binding AmbientCustomLeft}" />
+                                                    </c:SettingRow>
+                                                    <c:SettingRow Title="Right ear level">
+                                                        <Slider Width="200" Style="{StaticResource HSlider}" Minimum="0" Maximum="2" Value="{Binding AmbientCustomRight}" />
+                                                    </c:SettingRow>
+                                                    <c:SettingRow Title="Tone" Description="From softer to clearer.">
+                                                        <Slider Width="200" Style="{StaticResource HSlider}" Minimum="0" Maximum="4" Value="{Binding AmbientTone}" />
+                                                    </c:SettingRow>
+                                                </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
                                     </Border>
@@ -493,7 +500,7 @@
                                         <c:SettingRow Title="Use ambient sound during calls" Description="Hear your own voice more naturally while you talk.">
                                             <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding Sidetone}" />
                                         </c:SettingRow>
-                                        <c:SettingRow Title="Noise controls with one earbud" Description="Keep noise canceling or ambient sound on while wearing only one bud.">
+                                        <c:SettingRow Title="Noise controls with one earbud" Description="Keep noise controls on while wearing only one bud.">
                                             <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding NoiseControlsWithOneEarbud}" />
                                         </c:SettingRow>
                                     </StackPanel>

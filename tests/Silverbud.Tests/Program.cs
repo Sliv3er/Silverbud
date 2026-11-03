@@ -87,5 +87,10 @@ var info = StatusParser.ParseDebugData(Convert.FromHexString(
 Check("Buds3 live: firmware R530XXU0AYG3, zeroed sensors reported as unknown",
     info.Firmware == "R530XXU0AYG3" && info.TemperatureL is null && info.VoltageL is null);
 
+// Live 2026-11-03: Buds3 answered NOISE_CONTROLS [02] (ambient) with ack [01], staying in noise canceling
+Check("Buds3 (R530) have no ambient sound", !BudsModel.HasAmbientSound(info.Firmware));
+Check("Buds3 Pro (R630) have ambient sound", BudsModel.HasAmbientSound("R630XXU0AYG3"));
+Check("no ambient sound before the firmware is known", !BudsModel.HasAmbientSound("—") && !BudsModel.HasAmbientSound(""));
+
 Console.WriteLine(failures == 0 ? "\nAll protocol checks passed." : $"\n{failures} check(s) failed.");
 return failures == 0 ? 0 : 1;

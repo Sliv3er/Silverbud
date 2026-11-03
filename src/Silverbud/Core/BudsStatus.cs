@@ -64,6 +64,16 @@ public sealed class DeviceDiagnostics
     public double? VoltageR { get; set; }
 }
 
+public static class BudsModel
+{
+    /// <summary>
+    /// Ambient sound exists on the Buds3 Pro only. The open-fit Buds3 (SM-R530, firmware "R530…") already let the room in,
+    /// and answer a switch to ambient by staying in their current mode. Unknown until the firmware version arrives.
+    /// </summary>
+    public static bool HasAmbientSound(string firmware) =>
+        firmware.Length >= 4 && char.IsLetter(firmware[0]) && !firmware.StartsWith("R530", StringComparison.OrdinalIgnoreCase);
+}
+
 /// <summary>Payload layouts for the Galaxy Buds3 (Buds3 Pro shares everything read here).</summary>
 public static class StatusParser
 {

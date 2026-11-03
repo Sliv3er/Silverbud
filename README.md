@@ -42,7 +42,7 @@ Silverbud talks to the buds directly over Bluetooth, the same way the phone app 
 |---|---|
 | **Pair and connect** | Find buds in pairing mode and pair them. Connect and disconnect the audio with one click. It connects automatically when you take the buds out of the case, and turns Bluetooth on if it's off. Works with both **LE Audio** and classic Bluetooth. |
 | **Battery** | Left, right and case levels, live. Shows whether each bud is in your ear, out, in the case or charging. Notifies you when a bud runs low. |
-| **Noise control** | Off, noise canceling or ambient sound. Ambient level, plus separate left/right levels and tone. |
+| **Noise control** | Off or noise canceling. On the Buds3 Pro, also ambient sound, with an ambient level, separate left/right levels and tone. The open-fit Buds3 have no ambient mode. |
 | **Equalizer** | Normal, Bass boost, Soft, Dynamic, Clear, Treble boost, and a 9-band custom EQ (experimental). |
 | **Listening** | Left/right balance and game mode (lower audio delay). |
 | **Pinch controls** | Turn each gesture on or off, including call gestures. Pick the pinch-and-hold action per ear (noise controls, voice assistant, volume, Spotify). Double-tap the earbud edge for volume. |
@@ -55,7 +55,7 @@ Silverbud talks to the buds directly over Bluetooth, the same way the phone app 
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/images/screenshot-sound.png" alt="Sound tab: noise control, ambient sound, equalizer with custom 9-band sliders"><p align="center"><b>Sound</b>: noise control and equalizer</p></td>
+    <td width="50%"><img src="docs/images/screenshot-sound.png" alt="Sound tab: noise control and equalizer with custom 9-band sliders"><p align="center"><b>Sound</b>: noise control and equalizer</p></td>
     <td width="50%"><img src="docs/images/screenshot-controls.png" alt="Controls tab: pinch gesture switches"><p align="center"><b>Controls</b>: pinch gestures</p></td>
   </tr>
   <tr>
@@ -118,7 +118,7 @@ The buds are connected but won't offer their settings channel. This usually mean
 <details>
 <summary><b>Noise canceling switches back to Off</b></summary>
 
-The Buds3 refuse noise canceling and ambient sound while you wear only one bud, unless **Noise controls with one earbud** is on. When that happens, Silverbud shows a notice in the Noise control card. Select **Allow with one bud** to turn the setting on and switch modes in one go. You can also change the setting in the **Device** tab.
+The buds refuse noise canceling (and ambient sound, on the Buds3 Pro) while you wear only one bud, unless **Noise controls with one earbud** is on. When that happens, Silverbud shows a notice in the Noise control card. Select **Allow with one bud** to turn the setting on and switch modes in one go. You can also change the setting in the **Device** tab.
 </details>
 
 <details>

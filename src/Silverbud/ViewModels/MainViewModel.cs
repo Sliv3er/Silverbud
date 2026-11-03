@@ -1302,7 +1302,17 @@ public sealed class MainViewModel : Observable, IDisposable
     // ───── About ─────
 
     private string _firmware = "—", _hardware = "—", _temperatures = "—", _voltages = "—";
-    public string Firmware { get => _firmware; private set => Set(ref _firmware, value); }
+    public string Firmware
+    {
+        get => _firmware;
+        private set
+        {
+            if (Set(ref _firmware, value))
+                Raise(nameof(HasAmbientSound));
+        }
+    }
+
+    public bool HasAmbientSound => BudsModel.HasAmbientSound(_firmware);
     public string Hardware { get => _hardware; private set => Set(ref _hardware, value); }
     public string Temperatures { get => _temperatures; private set => Set(ref _temperatures, value); }
     public string Voltages { get => _voltages; private set => Set(ref _voltages, value); }
